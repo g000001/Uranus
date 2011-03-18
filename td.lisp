@@ -5,7 +5,7 @@
 ;;; 1984/05/11
 ;;; (c) H. Nakashima and S. Tomura
 
-(in-package 'uranus)
+(in-package :uranus)
 
 (defstruct (td (:print-function td-printer))
   (level 0)
@@ -41,12 +41,12 @@
       (print-lazy-td (td-print-form td) str)))
 
 (defun td-print-form (td)
-  (if (eq (td-term td) 'user::*)
+  (if (eq (td-term td) 'uranus-user::*)
       (if (and (listp (td-pred td))
-	       (eq (car (last (td-pred td))) 'user::*))
+	       (eq (car (last (td-pred td))) 'uranus-user::*))
 	  (strip-last (td-pred td))
 	  (td-pred td))
-      `(,(td-term td) user::! ,(td-pred td))))
+      `(,(td-term td) uranus-user::! ,(td-pred td))))
 
 (defun strip-last (l)
   (cond ((atom l) nil)
@@ -55,7 +55,7 @@
 
 (defun print-eager-td (td str)
   (if (and (listp td) (eq (car td) 'eval))
-      (format t "/@~a" (second td))
+      (format t "\@~a" (second td))
       (progn (princ "{" str)
 	     (print-td-rest td "}" str))))
 

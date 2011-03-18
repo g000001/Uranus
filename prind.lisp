@@ -2,11 +2,34 @@
 ;;; Print with Indentation system
 ;;; (c) T. Chikayama
 
+(IN-PACKAGE :URANUS-USER)
+
 (defvar line-length 80. "")
 (defvar colleft nil "")
 (defvar plen nil "")
+(DEFVAR *CURSOR-POS* 0)
 
 ;(setq line-length 80.)
+(DEFUN CURSOR ()
+  (MOD *CURSOR-POS* LINE-LENGTH))
+
+(DEFUN TAB (N)
+  (LOOP :REPEAT N :DO (PRINC "  "))
+  (INCF *CURSOR-POS* (* N 2)))
+(DEFUN MEMQ (FN LIST)
+  (MEMBER FN LIST :TEST #'EQ))
+(DEFUN ASSQ (ITEM ALIST)
+  (ASSOC ITEM ALIST :TEST #'EQ))
+(DEFUN FLATSIZE (X)
+  (LENGTH (PRINC-TO-STRING X)))
+
+(DEFUN PRINCC (OBJ)
+  (PRINC OBJ)
+  (INCF *CURSOR-POS* (LENGTH (PRINC-TO-STRING OBJ))))
+
+(DEFUN PRIN1C (OBJ)
+  (PRIN1 OBJ)
+  (INCF *CURSOR-POS* (LENGTH (PRIN1-TO-STRING OBJ))))
 
 (defvar usebq nil "use back quote sytle")
 
@@ -14,6 +37,7 @@
 (DECLARE (*LEXPR prind @PRIND))
 
 (DEFUN PRIND (ITEM &OPTIONAL (ASBLOCK) (PLEV) (PLEN))
+  (SETQ *CURSOR-POS* 0)
    (AND PLEV
         (SETQ ITEM (@PRUNE ITEM PLEV (COND (PLEN (1- PLEN)) (T 999999.)))))
    (AND USEBQ (NOT PLEV) (SETQ ITEM (ELIMINATE-COMMA (USEBQ ITEM))))
@@ -22,14 +46,14 @@
 
 (DEFUN @PRUNE (ITEM PLEV PL)
    (COND ((ATOM ITEM) ITEM)
-         ((zerop PLEV) 'User:?)
-         ((AND (zerop PL) (CDR ITEM)) '(User:???))
+         ((zerop PLEV) 'URANUS-User:?)
+         ((AND (zerop PL) (CDR ITEM)) '(URANUS-User:???))
          (T (CONS (@PRUNE (CAR ITEM) (1- PLEV) PLEN)
                   (@PRUNE (CDR ITEM) PLEV (1- PL))))))
 
 (DEFUN @PRIND (ITEM INDENT &OPTIONAL (CLOSE 0) (ASBLOCK))
    (TAB INDENT)
-   (COND ((ATOM ITEM) (PRIN1 ITEM))
+   (COND ((ATOM ITEM) (PRIN1C ITEM))
          ((AND (MEMQ (CAR ITEM) '(QUOTE BQ COMMA))
                (LISTP (CDR ITEM))
                (NULL (CDDR ITEM)))
@@ -38,14 +62,15 @@
               (AND (ATOM (CAR ITEM)) (ATOM (CDR ITEM))))
           (@PRIN1 ITEM))
          ((EQ (CAR ITEM) 'DOTTED) (@DOTTED ITEM INDENT CLOSE))
-         (T (PRINC "(")
+         (T (PRINCC "(")
             (FUNCALL (COND ((OR ASBLOCK (< (- line-length (CURSOR) CLOSE) 40.))
                             (FUNCTION @BLOCK))
                            ((SYMBOLP (CAR ITEM))
-                            (OR (AND (EVERY (CDR ITEM) (FUNCTION ATOM)
-					    #'(lambda (x) (cond ((atom x) nil)
+                            (OR (AND (EVERY #'(lambda (x) (cond ((atom x) nil)
 								((atom (cdr x)) nil)
-								(t (cdr x)))))
+								(t (cdr x))))
+                                            ;(FUNCTION ATOM) 
+                                            (CDR ITEM))
 						;This ste-function is a patch.
 						;EVERY does not handle a dotted pair
 						;at the end of a list.
@@ -59,72 +84,72 @@
                ITEM
                (1+ INDENT)
                (1+ CLOSE))
-            (PRINC ")"))))
+            (PRINCC ")")(VALUES))))
 
 (DEFUN @PRIN1 (ITEM)
    (COND ((ATOM ITEM) (PRIN1 ITEM))
          ((AND (MEMQ (CAR ITEM) '(QUOTE BQ COMMA))
                (LISTP (CDR ITEM))
                (NULL (CDDR ITEM)))
-          (PRINC (CDR (ASSQ (CAR ITEM)
-                         '((QUOTE . \') (BQ . \\) (COMMA . \,))))
+          (PRINCC (CDR (ASSQ (CAR ITEM)
+                         '((QUOTE . \') (BQ . \`) (COMMA . \,))))
                 )
           (@PRIN1 (CADR ITEM)))
          ((EQ (CAR ITEM) 'DOTTED)
-          (PRINC "(")
+          (PRINCC "(")
           (DO NIL
               (NIL)
               (@PRIN1 (FIRST (SECOND ITEM)))
               (OR (AND (LISTP (SECOND (SECOND ITEM)))
                        (EQ (CAR (SECOND (SECOND ITEM))) 'DOTTED))
                   (RETURN NIL))
-              (PRINC " ")
+              (PRINCC " ")
               (SETQ ITEM (SECOND (SECOND ITEM))))
           (AND (NOT (NULL (SECOND (SECOND ITEM))))
-               (PROGN (PRINC " . ")
+               (PROGN (PRINCC " . ")
                       (@PRIN1 (SECOND (SECOND ITEM)))))
-          (PRINC ")"))
-         (T (PRINC "(")
+          (PRINCC ")")(VALUES))
+         (T (PRINCC "(")
             (DO NIL
                 (NIL)
                 (@PRIN1 (POP ITEM))
                 (COND ((NULL ITEM) (RETURN NIL))
-                      ((LISTP ITEM) (PRINC " "))
-                      (T (PRINC " . ")
+                      ((LISTP ITEM) (PRINCC " "))
+                      (T (PRINCC " . ")
                          (PRIN1 ITEM)
                          (RETURN NIL))))
-            (PRINC ")"))))
+            (PRINCC ")")(VALUES))))
 
 
 (DEFUN @STANDARD (ITEM INDENT CLOSE)
-   (PRIN1 (CAR ITEM))
+   (PRIN1C (CAR ITEM))
    (@MISER (CDR ITEM)
            (LET ((N (FLATSIZE (CAR ITEM))))
             (+ INDENT 1. (COND ((> N 6.) 1.) (T N))))
            CLOSE))
 
 (DEFUN @QUOTE (ITEM INDENT CLOSE)
-   (PRINC (CDR (ASSQ (CAR ITEM) '((QUOTE . \') (BQ . \\) (COMMA . \,))))
+   (PRINCC (CDR (ASSQ (CAR ITEM) '((QUOTE . \') (BQ . \`) (COMMA . \,))))
          )
    (@PRIND (CADR ITEM) (1+ INDENT) CLOSE))
 
 (DEFUN @DOTTED (ITEM INDENT CLOSE)
-   (PRINC "(")
+   (PRINCC "(")
    (DO NIL
        (NIL)
        (@PRIND (CAR (SECOND ITEM)) (1+ INDENT) CLOSE)
        (OR (AND (LISTP (SECOND (SECOND ITEM)))
                 (EQ (CAR (SECOND (SECOND ITEM))) 'DOTTED))
            (RETURN NIL))
-       (PRINC " ")
+       (PRINCC " ")
        (SETQ ITEM (SECOND (SECOND ITEM))))
    (AND (NOT (NULL (SECOND (SECOND ITEM))))
         (PROGN (COND ((> (- LINE-LENGTH (CURSOR)) 3.)
-                      (PRINC " . ")
+                      (PRINCC " . ")
                       (TAB (1+ INDENT)))
-                     (T (TAB INDENT) (PRINC " . ")))
+                     (T (TAB INDENT) (PRINCC " . ")))
                (@PRIND (SECOND (SECOND ITEM)) (CURSOR) (1+ CLOSE))))
-   (PRINC ")"))
+   (PRINCC ")")(VALUES))
 
 (DEFUN @MISER (ITEM INDENT CLOSE)
    (DO NIL
@@ -132,16 +157,16 @@
        (@PRIND (POP ITEM) INDENT (COND ((NULL ITEM) CLOSE) (T 0.))))
    (OR (NULL ITEM)
        (PROGN (TAB INDENT)
-              (PRINC ". ")
-              (PRIN1 ITEM))))
+              (PRINCC ". ")
+              (PRIN1C ITEM))))
 
 (DEFUN @SETQ (ITEM INDENT CLOSE)
-   (PRIN1 (POP ITEM))
+   (PRIN1C (POP ITEM))
    (SETQ INDENT (1+ (CURSOR)))
    (DO NIL
        ((OR (ATOM ITEM) (NOT (SYMBOLP (CAR ITEM))) (ATOM (CDR ITEM))))
        (@PRIND (POP ITEM) INDENT 0.)
-       (PRINC " ")
+       (PRINCC " ")
        (@PRIND (CAR ITEM)
                (COND ((PRINTABLE
                          (POP ITEM)
@@ -153,35 +178,35 @@
 
 (DEFUN @DEFUN (ITEM INDENT CLOSE)
    (COND ((LISTP (SECOND ITEM)) (@BLOCK ITEM INDENT CLOSE))
-         (T (PRIN1 (POP ITEM))
-            (PRINC " ")
+         (T (PRIN1C (POP ITEM))
+            (PRINCC " ")
             (@WITHVARS ITEM INDENT CLOSE))))
 
 (DEFUN @WITHVARS (ITEM INDENT CLOSE)
-   (PRIN1 (POP ITEM))
-   (PRINC " ")
+   (PRIN1C (POP ITEM))
+   (PRINCC " ")
    (@PRIND (POP ITEM) (CURSOR) 0. T)
    (@MISER ITEM (+ INDENT 2.) CLOSE))
 
 (DEFUN @LAMBDA (ITEM INDENT CLOSE)
-   (PRIN1 (POP ITEM))
-   (PRINC " ")
+   (PRIN1C (POP ITEM))
+   (PRINCC " ")
    (@PRIND (POP ITEM) (CURSOR) 0. T)
    (@MISER ITEM INDENT CLOSE))
 
 (DEFUN @FUNCTION (ITEM INDENT CLOSE)
-   (PRIN1 (POP ITEM))
+   (PRIN1C (POP ITEM))
    (@MISER ITEM INDENT CLOSE))
 
 (DEFUN @FUNCALL (ITEM INDENT CLOSE)
-   (PRIN1 (POP ITEM))
-   (PRINC " ")
+   (PRIN1C (POP ITEM))
+   (PRINCC " ")
    (@PRIND (POP ITEM) (CURSOR) 0.)
    (@MISER ITEM (+ INDENT 2.) CLOSE))
 
 (DEFUN @PROG (ITEM INDENT CLOSE)
-   (PRIN1 (POP ITEM))
-   (PRINC " ")
+   (PRIN1C (POP ITEM))
+   (PRINCC " ")
    (@PRIND (POP ITEM) (CURSOR) 0. T)
    (SETQ INDENT (+ INDENT 2.))
    (DO NIL
@@ -192,8 +217,8 @@
                (COND ((NULL ITEM) CLOSE) (T 0.))))
    (OR (NULL ITEM)
        (PROGN (TAB INDENT)
-              (PRINC ". ")
-              (PRIN1 ITEM))))
+              (PRINCC ". ")
+              (PRIN1C ITEM))))
 
 (DEFUN @BLOCK (ITEM INDENT CLOSE)
    (DO NIL
@@ -204,8 +229,8 @@
                           ITEM
                           (- (MIN LINE-LENGTH (+ INDENT 80.)) (CURSOR) CLOSE 2.))
                        (TAB INDENT))
-                   (PRINC " . ")
-                   (PRIN1 ITEM))))
+                   (PRINCC " . ")
+                   (PRIN1C ITEM))))
        (COND ((OR (PRINTABLE
                      (CAR ITEM)
                      (- (MIN LINE-LENGTH (+ INDENT 80.))
@@ -220,7 +245,7 @@
                                     (COND ((NULL (CDR ITEM)) CLOSE) 
                                      (T 1.)))))))
               (@PRIN1 (POP ITEM))
-              (OR (ATOM ITEM) (EQ (CURSOR) LINE-LENGTH) (PRINC " ")))
+              (OR (ATOM ITEM) (EQ (CURSOR) LINE-LENGTH) (PRINCC " ")))
              (T (@PRIND (POP ITEM) (CURSOR) (COND ((NULL ITEM) CLOSE) (T 0.)))
                 (OR (NULL ITEM) (TAB INDENT))))))
 
@@ -267,9 +292,9 @@
                          (LISTP (CDDR Y))
                          (NULL (CDDDR Y))
                          (OR (ATOM (SECOND Y))
-                             (NEQ (CAR (SECOND Y)) 'QUOTE)
+                             (NOT (EQ (CAR (SECOND Y)) 'QUOTE))
                              (ATOM (THIRD Y))
-                             (NEQ (CAR (THIRD Y)) 'QUOTE)))
+                             (NOT (EQ (CAR (THIRD Y)) 'QUOTE))))
                     (LIST 'BQ
                           (LIST 'DOTTED
                                 (USEBQ (MAPCAR 
@@ -284,9 +309,9 @@
                                            (T (LIST 'COMMA Y)))))
                                         (CDR Y))))))
                    ((AND (EQ (FIRST Y) 'LIST)
-                         (SOME (CDR Y)
-                            (FUNCTION
-                             (LAMBDA (Y) (OR (ATOM Y) (NEQ (CAR Y) 'QUOTE))))))
+                         (SOME (FUNCTION
+                             (LAMBDA (Y) (OR (ATOM Y) (NOT (EQ (CAR Y) 'QUOTE)))))
+                            (CDR Y)))
                     (LIST 'BQ
                           (USEBQ (MAPCAR (FUNCTION 
                                           (LAMBDA (Y) 
@@ -307,6 +332,10 @@
                (EQ (CAR (SECOND X)) 'BQ))
           (ELIMINATE-COMMA (SECOND (SECOND X))))
          (T (CONS (ELIMINATE-COMMA (CAR X)) (ELIMINATE-COMMA (CDR X))))))
+
+#+ANSI-CL
+(DEFUN PUTPROP (SYM VAL KEY)
+  (SETF (GET SYM KEY) VAL))
 
 (MAPC (FUNCTION (LAMBDA (X) (PUTPROP X (FUNCTION @FUNCTION) 'PRIND)))
    '(FUNCTION))

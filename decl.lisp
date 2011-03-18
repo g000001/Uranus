@@ -1,6 +1,5 @@
 ;;; -*- Syntax: Common-lisp -*-
-#+symbolics(in-package :cl-user)
-#-symbolics(in-package :user)
+(in-package :URANUS-USER)
 
 (push 'uranus *features*)
 
@@ -23,8 +22,7 @@
 	   macro
 	   ATTENTION
 	   uranus-system-code) 
-	#+symbolics 'cl-user
-	#-symbolics 'user)
+        'URANUS-user)
 
 ;;; to amuse
 (export '($$$ ? n b p pp i in ib it k d e c f v fn r
@@ -32,17 +30,18 @@
 	      stack top level x l last li ri bi bo u ?
 	      member append nil
 	      * *ELEMENT *REST *TOP *REST *any *a *x *y *z)
-	#+symbolics 'cl-user
-	#-symbolics 'user)
+        'URANUS-user)
 
-#-symbolics(in-package 'time)
-#-symbolics
+(DEFPACKAGE :TIME 
+  (:USE :CL))
+(IN-PACKAGE :TIME)
+
 (export '(microsecond-time
 	get-universal-time
 	fixnum-microsecond-time
 	    ) 'time)
 
-#-symbolics
+#+SYMBOLICS
 (set-dispatch-macro-character #\# #\^
   (get-dispatch-macro-character #\# #\\))
 

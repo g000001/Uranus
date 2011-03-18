@@ -83,7 +83,7 @@ t
 
 
 (defun read-from-window (prompt)
-  (in-package :cl-user)
+  (in-package :uranus-user)
   (terpri) (princ prompt)
   (or
     (let ((blip (zl:send *terminal-io* ':any-tyi)))

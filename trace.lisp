@@ -5,7 +5,7 @@
 ;;; 1984/05/11
 ;;; by H. Nakashima
 
-(in-package 'uranus)
+(in-package :uranus)
 
 (DEFUN Trace-fetch-value (X &OPTIONAL ($SUBST NIL) (FETCH-LEVEL 0.))
    (COND ((ASSIGNED X $SUBST)
@@ -19,7 +19,7 @@
 			  )
 			 (T X)))
          ((ATOM X) X)
-         ((ZEROP (setq fetch-level (1- FETCH-LEVEL))) 'USER:?)
+         ((ZEROP (setq fetch-level (1- FETCH-LEVEL))) 'URANUS-USER:?)
          (T (CONS (Trace-fetch-value (CAR X) $SUBST FETCH-LEVEL)
                   (Trace-fetch-value (CDR X) $SUBST FETCH-LEVEL)))))
 
@@ -36,7 +36,7 @@
    (if @attention
        (progn
 	 (r@push-continuation (ncons @form) @old-subst)	;save the current goal
-	 (setq @form '(USER:ATTENTION))		;and change it to ATTENTION
+	 (setq @form '(URANUS-USER:ATTENTION))		;and change it to ATTENTION
 	 (setq @definitions (r@getdef @form @unseen-world))
 	 (setq @negations (pop @definitions))
 	 (setq @attention nil)			;and reset flags

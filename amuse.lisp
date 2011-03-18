@@ -9,12 +9,7 @@
 
 ;;; Package Declaration is in "uranus:system; system.lisp".
 
-#-symbolics(in-package 'zl)
-#-symbolics(export '(send) :zl)
-#-symbolics(in-package 'zl)
-#-symbolics(export '(send) :zl)
-
-(in-package 'amuse)
+(in-package :amuse)
 
 (export '(getfile putfile fetchvalue) 'amuse)
 
@@ -32,7 +27,7 @@
 (defvar editor-chain nil "")
 (defvar editor-stack nil "")
 (defvar editor-variable-prefix #\& "")
-(defvar find nil "")
+(defvar *find* nil "")
 (defvar edit-file nil "")
 
 (defvar edit-print? nil "")
@@ -54,7 +49,7 @@
 (defvar  amuse-command-window nil "")		;invokation of AMUSE
 
 
-(defmacro User:edit (name . com)
+(defmacro Uranus-User:edit (name . com)
   `(Edit-lisp ,name ,com))
 
 (DEFUN E@FETCH (X SUBST &OPTIONAL (VALUE (ASSOC X (CDR SUBST))))
@@ -66,15 +61,15 @@
                  (FETCHVALUE (E@FETCH X SUBST) '(NIL) LEVEL))
                 (T X)))
          ((ATOM X) X)
-         ((ZEROP (1- LEVEL)) 'User:?)
+         ((ZEROP (1- LEVEL)) 'Uranus-User:?)
          (T (CONS (FETCHVALUE (CAR X) SUBST (1- LEVEL))
                   (FETCHVALUE (CDR X) SUBST LEVEL)))))
 
 ;;; The entry function of Amuse system.
-(DEFUN User:AMUSE (EDIT-NAME &OPTIONAL (ENTRANCE-COMMAND NIL) (with-window nil))
+(DEFUN Uranus-User:AMUSE (EDIT-NAME &OPTIONAL (ENTRANCE-COMMAND NIL) (with-window nil))
   (if with-window (set-up-amuse-windows))
   (CATCH ':EDIT
-    (LET ((EDITOR-CHAIN NIL) (EDITOR-STACK NIL) (FIND NIL) 
+    (LET ((EDITOR-CHAIN NIL) (EDITOR-STACK NIL) (*FIND* NIL) 
 	  (PRINTLEVEL 4.) (EDITOR-VARIABLE-PREFIX #\&)
 	  (*standard-input* (if with-window amuse-command-window *terminal-io*))
 	  (*standard-output* (if with-window amuse-print-window *terminal-io*)))
@@ -87,8 +82,8 @@
 		(T (RETURN NIL)))))
       (ec@v) (ec@p)
       (LET ((EDIT-PRINT? T)) (E@LOOP))))
-  (if with-window (zl:send *terminal-io* ':expose))
-  (if with-window (zl:send *terminal-io* ':select)))
+  #+LISPM (if with-window (zl:send *terminal-io* ':expose))
+  #+LISPM (if with-window (zl:send *terminal-io* ':select)))
 
 #-symbolics
 (defun set-up-amuse-windows () nil)
@@ -135,18 +130,18 @@
 		    #'(LAMBDA (DEF)
 			(setf (symbol-function edit-name) (fetchvalue def))))
 		  (EDITOR-EXECUTE #'(LAMBDA (x) (PRINT (EVAL x)))))
-	      (USER:AMUSE EDIT-NAME COM)))
+	      (URANUS-USER:AMUSE EDIT-NAME COM)))
 	(T (LET ((EDITOR-TYPE NIL) 
 		 (EDITOR-GET-DEFINITION #'(LAMBDA (X) (GETFILE X))) 
 		 (EDITOR-RESTORE-DEFINITION
 		   #'(LAMBDA (DEF) (PUTFILE EDIT-NAME DEF)))
 		 (EDITOR-EXECUTE #'(LAMBDA (x) (PRINT (EVAL x)))))
-             (USER:AMUSE EDIT-NAME COM)))))
+             (URANUS-USER:AMUSE EDIT-NAME COM)))))
 
 (DEFUN E@LOOP NIL
    (DO () (NIL)
      (CATCH ':EDITLOOP
-       (if with-window (zl:send *standard-input* ':select))
+       #+LISPM (if with-window (zl:send *standard-input* ':select))
        (E@INTERPRET (read *standard-input*)))))
 
 (DEFUN E@INTERPRET (EDIT-COMMAND)
@@ -164,8 +159,8 @@
 (defun ec@b () (e@before))
 
 (defun ec@p ()
-       (if with-window (zl:send amuse-print-window ':clear-window))
-       (if with-window (zl:send amuse-print-window ':select))
+       #+LISPM (if with-window (zl:send amuse-print-window ':clear-window))
+       #+LISPM (if with-window (zl:send amuse-print-window ':select))
        (Pprint (FETCHVALUE (CAAR EDITOR-CHAIN) '(NIL) PRINTLEVEL)))
 
 (defun ec@pp () (PPRINT (CAAR EDITOR-CHAIN)))
@@ -192,7 +187,7 @@
 
 (defun ec@v () (E@VIEW))
 
-(defun ec@fn () (E@FINDNEXT FIND))
+(defun ec@fn () (E@FINDNEXT *FIND*))
 
 (defun ec@r0 () (Ec@r (E@READ)))
 
@@ -388,7 +383,7 @@
 (defun ec@o () (Ec@pop))
 
 (DEFUN Ec@f (*ITEM*)
-  (setq find *item*)
+  (setq *find* *item*)
   (LET ((*UNDOLIST* NIL)) (OR (E@FIND1) (E@ERR "not found"))))
 
 (DEFUN E@FIND1 NIL
@@ -402,10 +397,10 @@
 
 ;;; *** "length" belongs to "global". So below def. will destroy the system function.
 ;;;  To avoid this, .....
-(defun list-length (x)
+#|(defun list-length (x)
   (do ((i 0 (1+ i))
        (y x (cdr y)))
-      ((atom y) i)))
+      ((atom y) i)))|#
 
 (DEFUN E@FINDNEXT (*ITEM*)
    (LET ((OLDCHAIN EDITOR-CHAIN))
@@ -479,15 +474,15 @@
                 (PUSH ITEM EDIT-LOAD)))))
 
 (defun e@view nil
-       (if with-window (zl:send amuse-view-window ':clear-window))
-       (if with-window (zl:send amuse-view-window ':select))
+       #+LISPM (if with-window (zl:send amuse-view-window ':clear-window))
+       #+LISPM (if with-window (zl:send amuse-view-window ':select))
        (LET ((HC (CAAR EDITOR-CHAIN))
 	     (*standard-output* (if with-window amuse-view-window *terminal-io*)))
 	 (COND ((CDR EDITOR-CHAIN)
 		(pprint
 		  (FETCHVALUE
 		    (MAPCAR (FUNCTION
-			      (LAMBDA (X) (COND ((EQ X HC) 'USER:$$$) (T X))))
+			      (LAMBDA (X) (COND ((EQ X HC) 'URANUS-USER:$$$) (T X))))
 			    (CAR (SECOND EDITOR-CHAIN)))
 		    '(NIL)
 		    3.)
@@ -530,43 +525,43 @@
 
 (defun e@interpret-symbol ()
  (CASE EDIT-COMMAND
-             (USER:N (Ec@N) (ec@p) (ec@v))
-             (USER:B (Ec@B) (ec@p) (ec@v))
-             (USER:P (ec@p))
-             (USER:PP (ec@pp))
-             ((USER:I USER:IN) (ec@in0) (ec@v) (ec@p))
-             (USER:IB (ec@ib0) (ec@v) (ec@p))
-             (USER:IT (ec@it0) (ec@p))
-             (USER:K (ec@k) (ec@v) (ec@p))
-             (USER:D (ec@d) (ec@v) (ec@p))
-             (USER:E (ec@e0) (ec@v) (ec@p))
-             (USER:C (ec@c) (ec@p))
-             (USER:F (ec@f0) (ec@v) (ec@p))
-             (USER:V (ec@v))
-             (USER:FN (ec@fn) (ec@v) (ec@p))
-             (USER:R (ec@r0) (ec@p))
-             (USER:RA (ec@ra0) (ec@p))
-             (USER:R1 (ec@r1) (ec@p))
-             (USER:R2 (Ec@r2) (ec@p))
-             (USER:R3 (Ec@r3) (ec@p))
-             (USER:VAR (ec@var0))
-             (USER:Z (ec@z))
-             (USER:S (ec@s))
-             (USER:SC (ec@sc0))
-             (USER:Q (ec@q))
-             ((USER:O USER:POP) (ec@pop))
-             (USER:ST (ec@st))
-             (USER:STACK (ec@stack))
-             (USER:TOP (ec@top) (ec@v) (ec@p))
-             (USER:LEVEL (ec@level0))
-             (USER:X (FUNCALL EDITOR-EXECUTE (e@read)))
-             ((USER:LAST USER:L) (Ec@last) (ec@v) (ec@p))
-             (USER:LI (Ec@li) (ec@v) (ec@p))
-             (USER:RI (Ec@ri) (ec@v) (ec@p))
-             (USER:BI (Ec@bi0) (ec@v) (ec@p))
-             (USER:BO (Ec@bo) (ec@v) (ec@p))
-             (USER:U (ec@u0) (ec@v) (ec@p))
-             (User:? (ec@?))
+             (URANUS-USER:N (Ec@N) (ec@p) (ec@v))
+             (URANUS-USER:B (Ec@B) (ec@p) (ec@v))
+             (URANUS-USER:P (ec@p))
+             (URANUS-USER:PP (ec@pp))
+             ((URANUS-USER:I URANUS-USER:IN) (ec@in0) (ec@v) (ec@p))
+             (URANUS-USER:IB (ec@ib0) (ec@v) (ec@p))
+             (URANUS-USER:IT (ec@it0) (ec@p))
+             (URANUS-USER:K (ec@k) (ec@v) (ec@p))
+             (URANUS-USER:D (ec@d) (ec@v) (ec@p))
+             (URANUS-USER:E (ec@e0) (ec@v) (ec@p))
+             (URANUS-USER:C (ec@c) (ec@p))
+             (URANUS-USER:F (ec@f0) (ec@v) (ec@p))
+             (URANUS-USER:V (ec@v))
+             (URANUS-USER:FN (ec@fn) (ec@v) (ec@p))
+             (URANUS-USER:R (ec@r0) (ec@p))
+             (URANUS-USER:RA (ec@ra0) (ec@p))
+             (URANUS-USER:R1 (ec@r1) (ec@p))
+             (URANUS-USER:R2 (Ec@r2) (ec@p))
+             (URANUS-USER:R3 (Ec@r3) (ec@p))
+             (URANUS-USER:VAR (ec@var0))
+             (URANUS-USER:Z (ec@z))
+             (URANUS-USER:S (ec@s))
+             (URANUS-USER:SC (ec@sc0))
+             (URANUS-USER:Q (ec@q))
+             ((URANUS-USER:O URANUS-USER:POP) (ec@pop))
+             (URANUS-USER:ST (ec@st))
+             (URANUS-USER:STACK (ec@stack))
+             (URANUS-USER:TOP (ec@top) (ec@v) (ec@p))
+             (URANUS-USER:LEVEL (ec@level0))
+             (URANUS-USER:X (FUNCALL EDITOR-EXECUTE (e@read)))
+             ((URANUS-USER:LAST URANUS-USER:L) (Ec@last) (ec@v) (ec@p))
+             (URANUS-USER:LI (Ec@li) (ec@v) (ec@p))
+             (URANUS-USER:RI (Ec@ri) (ec@v) (ec@p))
+             (URANUS-USER:BI (Ec@bi0) (ec@v) (ec@p))
+             (URANUS-USER:BO (Ec@bo) (ec@v) (ec@p))
+             (URANUS-USER:U (ec@u0) (ec@v) (ec@p))
+             (Uranus-User:? (ec@?))
              (T (E@ERR "Undefined command"))))
 
 ;; Interface to Uranus

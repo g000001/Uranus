@@ -3,7 +3,7 @@
 ;;; Set up the interface to Lisp functions.
 ;;; by Hideyuki Nakashima
 
-(in-package 'uranus)
+(in-package :uranus)
 
 ;;; :LISP-PREDICATE indicates that no extra argument should be added in Uranus.
 ;;;   They succeed only when the corresponding lisp functions return non-NIL.
@@ -16,7 +16,7 @@
 	'(alphalessp aset atom call close defun
           dribble-start dribble-end ed fillarray format
 	  fquery greaterp lessp #+symbolics zl:login #+symbolics zl:logout memq null
-	  numberp setf setq zl:send setsyntax symbolp tab
+	  numberp setf setq #+LISPM zl:send setsyntax symbolp tab
 	  viewf yes-or-no-p zerop > < >= <=))
 
 #+symbolics

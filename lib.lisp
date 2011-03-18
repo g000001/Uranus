@@ -2,17 +2,17 @@
 ;;; Libralies for KCl/Symbolics
 ;;; (c) H. Nakashima
 
-(in-package 'uranus)
+(in-package :uranus)
 
 #+lucid (proclaim '(optimize speed (safety 0)))
 
 (defun rind (prmpt) (princ prmpt standard-input) (read standard-input))
 
-#-symbolics
+;#-CCL
 (defun tyi (&optional (stream *terminal-io*))
   (read-char stream))
 
-#-symbolics
+;#-CCL
 (defun untyi (&optional (stream *terminal-io*))
   (unread-char stream))
 
@@ -20,7 +20,7 @@
 (defun tyipeek (&optional (stream *terminal-io*))
   (peek-char nil stream))
 
-#-symbolics
+;#-CCL
 (defun tyo (x &optional (stream *terminal-io*))
   (read-char x stream))
 
@@ -40,11 +40,11 @@
 (defmacro aset (v a n)
   `(setf (aref ,a ,n) ,v))
 
-#+kcl
+#+ANSI-CL
  (defmacro memq (x a-list)
    `(member ,x ,a-list :test #'eq))
 
-#+kcl
+#+ansi-cl
   (defmacro delq (x y &optional (n 100)) 
    `(delete ,x ,y :test #'eq :count ,n))
 
@@ -57,13 +57,14 @@
 
 #-symbolics
 (defmacro flatsize (x)
+  (DECLARE (IGNORE X))
   `(cond (t 1)))
 
 (defmacro pathtosym (x)
     `(intern (namestring ,x)))
 
-#+kcl
-(defmacro user::string-append (&body s)
+#+ansi-cl
+(defmacro URANUS-user::string-append (&body s)
   `(concatenate 'string . ,s))
 
 #+symbolics					;Rel 7
@@ -72,5 +73,6 @@
   (remprop 'or 'gprint::formatter)
   )
 
-#+lucid
-(defun special-form-p (x) nil)
+#+ANSI-CL
+(DEFUN SPECIAL-FORM-P (x) 
+  (SPECIAL-OPERATOR-P X))

@@ -5,7 +5,7 @@
 ;;; 1984/05/11
 ;;; (c) H. Nakashima and S. Tomura
 #+symbolics(in-package 'uranus :use '(cl cl-user) :nicknames '(ura))
-#-symbolics(in-package 'uranus :nicknames '(ura))
+(in-package :uranus)
 #+lucid (proclaim '(optimize speed (safety 0)))
 
 (shadow 'system)
@@ -26,13 +26,14 @@
 	(terminal-output *terminal-io*)
 	(standard-input *terminal-io*)
 	(standard-output *terminal-io*))
+    (IN-PACKAGE :URANUS-USER)
     (init)
     (pgo)))
 
 (DEFUN INIT ()
   (setq line-length 80.)
-  (SETQ @URANUS-WORLD '(USER::standard-WORLD))  
-  (setq @basic-world '(User::standard-world))
+  (SETQ @URANUS-WORLD '(URANUS-USER::standard-WORLD))  
+  (setq @basic-world '(uranus-user::standard-world))
   (SETQ @PRINTLEVEL 99.)
   (setq @level 0.)			;necessary for printing the result
   (SETQ @TRACE NIL)
@@ -44,10 +45,10 @@
   (SETQ @DEBUG1 NIL)
   #+symbolics(fs:set-default-pathname "uranus-init.ura" @default-pathname)
   (INIT-SYSTEM-CODE)
-  #+symbolics (zl:send *terminal-io* ':add-asynchronous-character #^g #'kbd-attention)
+  #+symbolics (zl:send *terminal-io* ':add-asynchronous-character "#^g" #'kbd-attention)
   #+symbolics (zl:send *terminal-io* ':add-asynchronous-character #\suspend #'kbd-attention)
   #+(and vax (not kcl)) ;;; vaxlisp
-  (bind-keyboard-function #\^c #'(lambda () (funcall attention-handler)))
+  (bind-keyboard-function "#\^c" #'(lambda () (funcall attention-handler)))
   )
 
 ;;; Utilisp compatible attention handling functions for kcl.
@@ -59,7 +60,7 @@
   (AND (SETQ P TV:SELECTED-WINDOW)	;Find process to be hacked
        (SETQ P (zl:send P ':PROCESS))
        (case CHAR
-	 ((#^G #\suspend)
+	 (("#^G" #\suspend)
 	  ;;; (funcall p ':interrupt . &) means (send  p ':interrupt . &).
 	  (zl:PROCESS-RUN-FUNCTION '(:NAME "Attention" :PRIORITY 40.) P ':INTERRUPT 
 				'call-attention	char))
@@ -95,15 +96,15 @@
 
 #+(and vax (not kcl)) ;;; vaxlisp
 (eval-when (eval load)
-	   (setf user::*universal-error-handler* 'uranus-error-handler))
+	   (setf uranus-user::*universal-error-handler* 'uranus-error-handler))
 
 #+(and vax (not kcl)) ;;; vaxlisp
 (eval-when (eval load)
-	   (setf user::*top-level-prompt* "Type (uranus) to continue Uranus :"))
+	   (setf uranus-user::*top-level-prompt* "Type (uranus) to continue Uranus :"))
 
 #+(and vax (not kcl)) ;;; vaxlisp
 (eval-when (eval load)
-	   (setf (symbol-function 'user::uranus)
+	   (setf (symbol-function 'uranus-user::uranus)
 		 (symbol-function 'uranus::uranus)))
 
 
@@ -114,7 +115,7 @@
 
 (DEFMACRO VARP (X) 
   `(and (symbolp ,x)
-	(not (eq ,x 'user::||))
+	(not (eq ,x 'uranus-user::||))
 	(char= (aref (symbol-name ,x) 0) #\*))
   )
 
@@ -140,9 +141,9 @@
   (setq @step t @debug t)
   )
 
-(defun user::c nil (r@succeed) (throw :refuteloop t))
+(defun uranus-user::c nil (r@succeed) (throw :refuteloop t))
 
-(defun user::s nil
+(defun uranus-user::s nil
   (setq @step t @debug t)
   (r@succeed) (throw :refuteloop t))
 
@@ -193,7 +194,7 @@
 
 ;;; Result is a interfece to Lisp.  (result <form>) returns the result.
 
-(defun user::result (item)
+(defun uranus-user::result (item)
   (catch :uranusloop			
     (let ((@debug nil)
 	  (attention-handler (function attention)) 
@@ -370,11 +371,13 @@
 
 
 (DEFUN UNDO (UP)
-   (DO NIL
-       ((EQ @UNDOLIST UP))
-       (DELETE (CDAR @UNDOLIST) (CAAR @UNDOLIST) :test #'eq :count 1)
-;       (DELq (CDAR @UNDOLIST) (CAAR @UNDOLIST) 1)
-       (POP @UNDOLIST)))
+  (DO ()
+      ((EQ @UNDOLIST UP))
+    ;; (DELETE (CDAR @UNDOLIST) (CAAR @UNDOLIST) :test #'eq :count 1)
+    (SETF (CAAR @UNDOLIST)
+          (DELETE (CDAR @UNDOLIST) (CAAR @UNDOLIST) :test #'eq :count 1))
+    ;; (DELq (CDAR @UNDOLIST) (CAAR @UNDOLIST) 1)
+    (POP @UNDOLIST)))
 
 ;;;
 ;;; Lambda form: ((lambda <var> <body>) <arg>)
@@ -385,7 +388,9 @@
   `(let ((@bind nil))
      (lambda-link ,var ,vsubst ,arg ,asubst)
      (prog1 ,body 
-	    (delq @bind (car ,vsubst)))))
+	    #|(delq @bind (car ,vsubst))|#
+            (SETF (car ,vsubst)
+                  (delq @bind (car ,vsubst))))))
 
 (defun lambda-form (var body $args $subst)
   (lambda-bind var $subst $args $subst
@@ -401,7 +406,7 @@
        (ASSIGNED Y YSUBST)
        (SETQ Y (FETCH (CADR @FETCHED-VALUE) (CDDR @FETCHED-VALUE)))
        (SETQ YSUBST @FETCHED-SUBST))
-  (COND ((OR (EQ X 'USER::?) (EQ Y 'User::?)))
+  (COND ((OR (EQ X 'URANUS-USER::?) (EQ Y 'uranus-user::?)))
 	((expat-p x) (!@REFUTE X XSUBST Y YSUBST))
 	((expat-p y) (!@REFUTE Y YSUBST X XSUBST))
         ((VARP X)
@@ -432,8 +437,8 @@
        (ASSIGNED Y YSUBST)
        (SETQ Y (FETCH (CADR @FETCHED-VALUE) (CDDR @FETCHED-VALUE)))
        (SETQ YSUBST @FETCHED-SUBST))
-  (COND ((EQ X 'User::?))
-	((EQ Y 'User::?))
+  (COND ((EQ X 'uranus-user::?))
+	((EQ Y 'uranus-user::?))
 	((expat-p y) (!@REFUTE Y YSUBST `',X XSUBST))
         ((VARP X)
          (COND ((ASSIGNED X XSUBST)
@@ -461,8 +466,8 @@
        (ASSIGNED Y YSUBST)
        (SETQ Y (FETCH (CADR @FETCHED-VALUE) (CDDR @FETCHED-VALUE)))
        (SETQ YSUBST @FETCHED-SUBST))
-  (COND	((EQ X 'User::?))
-	((EQ Y 'User::?))
+  (COND	((EQ X 'uranus-user::?))
+	((EQ Y 'uranus-user::?))
 	((VARP X)
          (COND ((ASSIGNED X XSUBST)
                 (unify-q-q (CADR @FETCHED-VALUE) (CDDR @FETCHED-VALUE) Y YSUBST))
@@ -483,7 +488,7 @@
        (ASSIGNED Y YSUBST)
        (SETQ Y (FETCH (CADR @FETCHED-VALUE) (CDDR @FETCHED-VALUE)))
        (SETQ YSUBST @FETCHED-SUBST))
-  (COND ((EQ Y 'User::?))
+  (COND ((EQ Y 'uranus-user::?))
 	((and (td-p y) (> (td-level y) 0))
 	 (unify-t-t x xsubst y ysubst))
 	((expat-p y)
@@ -507,8 +512,8 @@
 (defun unify-t-t (x xsubst y ysubst)
 ;  (let ((xnewsubst (newsubst)) (ynewsubst (newsubst)))
 						;xsubst maybe = ysubst
-;    (lambda-bind 'user::* xsubst 'user::* xnewsubst
-;		 (lambda-bind 'user::* ysubst 'user::** ynewsubst
+;    (lambda-bind 'uranus-user::* xsubst 'uranus-user::* xnewsubst
+;		 (lambda-bind 'uranus-user::* ysubst 'uranus-user::** ynewsubst
 			      (and 
 				(eq (td-mode x) (td-mode y))
 				(= (td-level x) (td-level y))
@@ -550,7 +555,7 @@
 	 (COND ((EQUAL (LENGTH X) 2.)
 		(fetchvalue-q (second x) $subst fetch-level))
 	       (T X)))
-        ((ZEROP (setq fetch-level (1- FETCH-LEVEL))) 'USER::?)
+        ((ZEROP (setq fetch-level (1- FETCH-LEVEL))) 'URANUS-USER::?)
         (T (CONS (FETCHVALUE1 (CAR X) $SUBST FETCH-LEVEL)
                  (FETCHVALUE1 (CDR X) $SUBST FETCH-LEVEL)))))
 
@@ -563,7 +568,7 @@
 
 (defun fetchvalue-q1 (x $subst fetch-level within-td)
   (COND ((VARP X)
-         (COND ((and within-td (eq x 'user::*)) 'user::*)
+         (COND ((and within-td (eq x 'uranus-user::*)) 'uranus-user::*)
 	       ((ASSIGNED X $SUBST)
 		(fetchvalue-q1
 		  (CADR @FETCHED-VALUE)
@@ -580,7 +585,7 @@
 		  :level (td-level x)
 		  :mode (td-mode x)))
         ((ATOM X) X)
-        ((ZEROP (setq fetch-level (1- FETCH-LEVEL))) 'USER::?)
+        ((ZEROP (setq fetch-level (1- FETCH-LEVEL))) 'URANUS-USER::?)
         (T (CONS (fetchvalue-q1 (CAR X) $SUBST FETCH-LEVEL within-td)
                  (fetchvalue-q1 (CDR X) $SUBST FETCH-LEVEL within-td)))))
 
@@ -747,12 +752,12 @@
           ((LISTP NAME) 
 	   (cond
 	     ;;; lambda form == (lambda <var>  <body))
-	     ((eq (car name) 'user::lambda)
+	     ((eq (car name) 'uranus-user::lambda)
 	      (cond((and(= (length name) 3)(varp (second name)))
 		    (lambda-form (second name) (third name) @args $subst))
 		   (t (report-error "Illegal lambda form" @form))))
 	     ;;; clausal form == (clause <formal-args> . <body>)
-	     ((eq (car name) 'user::clause)
+	     ((eq (car name) 'uranus-user::clause)
 	      (cond ((>= (length name) 2)
 		     (clause-form (second name)(cddr name) @args $subst))
 		    (t (report-error "Illegal clausal form" @form))))
@@ -794,7 +799,7 @@
   (prog1 (RPLACD VAR-SUBST
                  (CONS (SETQ @BIND (CONS VAR (CONS ARGS A-SUBST)))
                        (CDR VAR-SUBST)))
-         (or (eq var 'user::*) (setq @bind nil))))
+         (or (eq var 'uranus-user::*) (setq @bind nil))))
 |#
 
 ;;;
@@ -811,7 +816,7 @@
 		  (pred (td-pred td))
 		  (@uranus-world (if (and (not (atom pred))
 					  (not (atom (cdr pred)))
-					  (eq (second pred) 'user::||))
+					  (eq (second pred) 'uranus-user::||))
 ;				     (prog1 (cons (fetchvalue (first pred) tsubst)
 ;						  (cdr tsubst))
 ;					    (setq pred (cddr pred)))
@@ -819,8 +824,8 @@
 					    (setq pred (cddr pred)))
 				     (cdr tsubst))))
 	     (cond
-               ((eq term 'user::*)
-		(cond((lambda-bind 'user::* tsubst oppornent osubst
+               ((eq term 'uranus-user::*)
+		(cond((lambda-bind 'uranus-user::* tsubst oppornent osubst
 				   (refute pred tsubst (1+ @level)))
 		      (link td tsubst oppornent osubst))
 		     (t (link td tsubst ''@fail@ tsubst) nil)))
@@ -842,8 +847,8 @@
          ((LISTP PRED) nil)			; lambda form, clause form, lisp form etc.
 	 ((td-p pred)
 	  (let ((newsubst (newsubst)))	;use newsubst instead of @new-subst(Tomura).
-	    (!@REFUTE PRED @OLD-SUBST 'User::* newsubst)
-	    (r@GET-PRED-VALUE (FETCHVALUE 'User::* newsubst) IND)))
+	    (!@REFUTE PRED @OLD-SUBST 'uranus-user::* newsubst)
+	    (r@GET-PRED-VALUE (FETCHVALUE 'uranus-user::* newsubst) IND)))
 	 (T (REPORT-ERROR "ILLEGAL PREDICATE" PRED) NIL)))
 
 

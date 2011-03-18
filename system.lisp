@@ -2,7 +2,7 @@
 ;;; Uranus initiation file
 ;;; (c) H. Nakashima and S. Tomura
 
-(in-package :cl-user)
+(in-package :URANUS-USER)
 
 (push ':uranus *features*)
 

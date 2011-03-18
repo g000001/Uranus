@@ -70,10 +70,9 @@
 ;;;                       Copy does not execute TD (fetchvalue -> fetchvalue-q).
 ;;; -----------------------------------------------------------
 
-#+symbolics(in-package 'uranus :use '(cl) :nicknames '(ura))
-#-symbolics(in-package 'uranus :nicknames '(ura))
+(in-package :uranus)
 
-(eval-when (eval compile load)
+(eval-when (:compile-toplevel :load-toplevel :execute)
 
 ;;; The things to be fixed:
 ;;;
@@ -82,7 +81,8 @@
 
 ;(export 'initial-readtable 'system)
 
-(defvar uranus-readtable (copy-readtable nil) "readtable for uranus system")
+#|(defvar uranus-readtable (copy-readtable nil) "readtable for uranus system")|#
+(defvar uranus-readtable *READTABLE* "readtable for uranus system")
 
 (export 'uranus-readtable)
 
@@ -140,7 +140,7 @@
 (defvar @URANUS-WORLD nil "")
 (defvar @basic-world nil "")
 (defvar @world-at-entrance nil "")
-(defvar @world-list '(User::standard-world) "List of all worlds")
+(defvar @world-list '(Uranus-User::standard-world) "List of all worlds")
 
 (defvar @BACKTRACE nil "")
 

@@ -4,7 +4,7 @@
 ;;; 1984/05/11 
 ;;; by Hideyuki Nakashima
 
-(in-package 'uranus)
+(in-package :uranus)
 
 #+symbolics
 (DEFUN URANUS-STEP NIL
@@ -62,20 +62,20 @@
           (DO ((key (read-from-window #\-) (read-from-window #\-)))
               (NIL)
 	    (case key
-	      (user::? (step@help *terminal-io*))
-	      (user::a (SETQ @STEP T @debug t))
-	      (user::b (PPRINT (p@BACKTRACE @PRINTLEVEL)))
-	      (user::c (RETURN NIL))
-	      (user::f (RETURN (SETQ @STEP NIL @debug (or @step @trace @traceall))))
-	      (user::g (RETURN (SETQ @STEPLEVEL @LEVEL)))
-	      (user::l (SETQ @PRINTLEVEL (Read *terminal-io*)))
-	      (user::n (return (r@fail)))
-	      (user::p (PPRINT (Trace-fetch-value @FORM @OLD-SUBST)))
-	      (user::q (THROW :URANUSLOOP NIL))
-	      (user::s (SETQ @STEP NIL)
+	      (uranus-user::? (step@help *terminal-io*))
+	      (uranus-user::a (SETQ @STEP T @debug t))
+	      (uranus-user::b (PPRINT (p@BACKTRACE @PRINTLEVEL)))
+	      (uranus-user::c (RETURN NIL))
+	      (uranus-user::f (RETURN (SETQ @STEP NIL @debug (or @step @trace @traceall))))
+	      (uranus-user::g (RETURN (SETQ @STEPLEVEL @LEVEL)))
+	      (uranus-user::l (SETQ @PRINTLEVEL (Read *terminal-io*)))
+	      (uranus-user::n (return (r@fail)))
+	      (uranus-user::p (PPRINT (Trace-fetch-value @FORM @OLD-SUBST)))
+	      (uranus-user::q (THROW :URANUSLOOP NIL))
+	      (uranus-user::s (SETQ @STEP NIL)
 		(PUSH (RIND "Predicate-name:") @SELECTSTEP))
-	      (user::u (RETURN (SETQ @STEPLEVEL (1- @LEVEL))))
-	      (user::x (LET ((@SELECTSTEP NIL) (@STEP NIL))
+	      (uranus-user::u (RETURN (SETQ @STEPLEVEL (1- @LEVEL))))
+	      (uranus-user::x (LET ((@SELECTSTEP NIL) (@STEP NIL))
 		      (EXECUTE (Read *terminal-io*))))
 	      (t (cond ((or (consp key) (td-p key))
 			(let ((@selectstep nil) (@step nil))
