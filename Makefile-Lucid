@@ -1,0 +1,64 @@
+All: packages uranus
+
+clean:
+	rm *.sbin
+
+install:
+	cp ./uranus /usr/local/bin
+
+packages: defs.sbin lib.sbin kernel.sbin amuse.sbin systempred.sbin \
+	 lispfunctions.sbin stepper.sbin trace.sbin td.sbin readin.sbin
+
+
+defs.sbin: decl.lisp defs.lisp
+	echo '(load "decl.lisp") ;\
+	(compile-file "defs.lisp")(quit)' | lisp
+
+lib.sbin: decl.lisp defs.sbin lib.lisp
+	echo '(load "decl.lisp") (load "defs") ;\
+	(compile-file "lib.lisp")(quit)' | lisp
+
+kernel.sbin: decl.lisp defs.sbin lib.sbin kernel.lisp td.sbin\
+amuse.sbin systempred.sbin
+	echo '(load "decl.lisp") (load "defs") (load "lib") ;\
+	(load "td") (load "amuse") (load "systempred");\
+	(compile-file "kernel.lisp")(quit)' | lisp
+
+amuse.sbin: decl.lisp amuse.lisp lib.sbin
+	echo '(load "decl.lisp") (load "lib") ;\
+	(compile-file "amuse.lisp")(quit)' | lisp
+
+systempred.sbin: decl.lisp defs.sbin lib.sbin  amuse.sbin\
+systempred.lisp  td.sbin lispfunctions.sbin
+	echo '(load "decl.lisp") (load "defs") (load "lib") ;\
+	(load "kernel") (load "amuse") (load "td") (load "lispfunctions");\
+	(compile-file "systempred.lisp")(quit)' | lisp
+
+lispfunctions.sbin: decl.lisp defs.sbin amuse.sbin lispfunctions.lisp
+	echo '(load "decl.lisp") (load "defs") (load "amuse") ;\
+	(compile-file "lispfunctions.lisp")(quit)' | lisp
+
+stepper.sbin: decl.lisp defs.sbin lib.sbin kernel.sbin stepper.lisp
+	echo '(load "decl.lisp") (load "defs") (load "lib") ;\
+	(load "kernel") ;\
+	(compile-file "stepper.lisp")(quit)' | lisp
+
+trace.sbin: decl.lisp defs.sbin lib.sbin kernel.sbin trace.lisp
+	echo '(load "decl.lisp") (load "defs") (load "lib") ;\
+	(load "kernel") ;\
+	(compile-file "trace.lisp")(quit)' | lisp
+
+td.sbin: decl.lisp defs.sbin lib.sbin td.lisp
+	echo '(load "decl.lisp") (load "defs") (load "lib") ;\
+	(compile-file "td.lisp")(quit)' | lisp
+
+readin.sbin: decl.lisp defs.sbin readin.lisp
+	echo '(load "decl.lisp") (load "defs") ;\
+	(compile-file "readin.lisp")(quit)' | lisp
+
+uranus: packages
+	echo 'Execute (load "make-uranus.lisp");\
+	and (save-uranus) in Lisp'
+	lisp
+
+

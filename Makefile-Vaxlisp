@@ -1,0 +1,68 @@
+URANUSDIR = /usr/local/uranus/common
+
+all: packages uranus
+
+install:
+	mv uranus.sus $(URANUSDIR)/uranus.sus
+
+packages: defs.fas lib.fas kernel.fas amuse.fas systempred.fas lispfunctions.fas \
+	stepper.fas trace.fas td.fas readin.fas
+
+
+defs.fas: decl.lisp defs.lisp
+	vaxlisp -V COMPILE -V "INITIALIZE=(decl.lisp)" \
+	-V "OPTIMIZE=(SPEED:3,SPACE:0,SAFETY:0,COMPILATION_SPEED:0)" -V VERBOSE \
+	defs.lisp
+
+
+lib.fas: decl.lisp defs.fas lib.lisp
+	vaxlisp -V COMPILE -V "INITIALIZE=(decl.lisp,defs)" \
+	-V "OPTIMIZE=(SPEED:3,SPACE:0,SAFETY:0,COMPILATION_SPEED:0)" -V VERBOSE \
+	lib.lisp
+
+kernel.fas: decl.lisp defs.fas lib.fas kernel.lisp
+	vaxlisp -V COMPILE -V "INITIALIZE=(decl.lisp,defs,lib)" \
+	-V "OPTIMIZE=(SPEED:3,SPACE:0,SAFETY:0,COMPILATION_SPEED:0)" -V VERBOSE \
+	kernel.lisp
+
+amuse.fas: decl.lisp lib.fas amuse.lisp
+	vaxlisp -V COMPILE -V "INITIALIZE=(decl.lisp,lib)" \
+	-V "OPTIMIZE=(SPEED:3,SPACE:0,SAFETY:0,COMPILATION_SPEED:0)" -V VERBOSE \
+	amuse.lisp
+
+systempred.fas: decl.lisp defs.fas lib.fas kernel.fas amuse.fas systempred.lisp
+	vaxlisp -V COMPILE -V "INITIALIZE=(decl.lisp,defs,lib,kernel,amuse)" \
+	-V "OPTIMIZE=(SPEED:3,SPACE:0,SAFETY:0,COMPILATION_SPEED:0)" -V VERBOSE \
+	systempred.lisp
+
+lispfunctions.fas: decl.lisp defs.fas amuse.fas lispfunctions.lisp
+	vaxlisp -V COMPILE -V "INITIALIZE=(decl.lisp,defs,amuse)" \
+	-V "OPTIMIZE=(SPEED:3,SPACE:0,SAFETY:0,COMPILATION_SPEED:0)" -V VERBOSE \
+	lispfunctions.lisp
+
+stepper.fas: decl.lisp defs.fas lib.fas kernel.fas stepper.lisp
+	vaxlisp -V COMPILE -V "INITIALIZE=(decl.lisp,defs,lib,kernel)" \
+	-V "OPTIMIZE=(SPEED:3,SPACE:0,SAFETY:0,COMPILATION_SPEED:0)" -V VERBOSE \
+	stepper.lisp
+
+trace.fas: decl.lisp defs.fas lib.fas kernel.fas trace.lisp
+	vaxlisp -V COMPILE -V "INITIALIZE=(decl.lisp,defs,lib,kernel)" \
+	-V "OPTIMIZE=(SPEED:3,SPACE:0,SAFETY:0,COMPILATION_SPEED:0)" -V VERBOSE \
+	trace.lisp
+
+td.fas: decl.lisp defs.fas lib.fas td.lisp
+	vaxlisp -V COMPILE -V "INITIALIZE=(decl.lisp,defs,lib)" \
+	-V "OPTIMIZE=(SPEED:3,SPACE:0,SAFETY:0,COMPILATION_SPEED:0)" -V VERBOSE \
+	td.lisp
+
+readin.fas: decl.lisp defs.fas readin.lisp
+	vaxlisp -V COMPILE -V "INITIALIZE=(decl.lisp,defs)" \
+	-V "OPTIMIZE=(SPEED:3,SPACE:0,SAFETY:0,COMPILATION_SPEED:0)" -V VERBOSE \
+	readin.lisp
+
+uranus: packages
+	echo '(load "make-uranus.lisp") \
+	(save-uranus-system "uranus.sus")\
+	(bye)' | vaxlisp
+
+

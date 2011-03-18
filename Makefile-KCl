@@ -1,0 +1,57 @@
+all: packages uranus
+
+install:
+	cp ./uranus /usr/local/bin
+
+packages: defs.o lib.o kernel.o amuse.o systempred.o lispfunctions.o \
+	stepper.o trace.o td.o readin.o
+
+
+defs.o: decl.lisp defs.lisp
+	echo '(load "decl.lisp") ;\
+	(compile-file "defs.lisp")' | kcl
+
+lib.o: decl.lisp defs.o lib.lisp
+	echo '(load "decl.lisp") (load "defs") ;\
+	(compile-file "lib.lisp")' | kcl
+
+kernel.o: decl.lisp defs.o lib.o kernel.lisp
+	echo '(load "decl.lisp") (load "defs") (load "lib") ;\
+	(compile-file "kernel.lisp")' | kcl
+
+amuse.o: decl.lisp amuse.lisp lib.o
+	echo '(load "decl.lisp") (load "lib") ;\
+	(compile-file "amuse.lisp")' | kcl
+
+systempred.o: decl.lisp defs.o lib.o kernel.o amuse.o systempred.lisp
+	echo '(load "decl.lisp") (load "defs") (load "lib") ;\
+	(load "kernel") (load "amuse") ;\
+	(compile-file "systempred.lisp")' | kcl
+
+lispfunctions.o: decl.lisp defs.o amuse.o lispfunctions.lisp
+	echo '(load "decl.lisp") (load "defs") (load "amuse") ;\
+	(compile-file "lispfunctions.lisp")' | kcl
+
+stepper.o: decl.lisp defs.o lib.o kernel.o stepper.lisp
+	echo '(load "decl.lisp") (load "defs") (load "lib") ;\
+	(load "kernel") ;\
+	(compile-file "stepper.lisp")' | kcl
+
+trace.o: decl.lisp defs.o lib.o kernel.o trace.lisp
+	echo '(load "decl.lisp") (load "defs") (load "lib") ;\
+	(load "kernel") ;\
+	(compile-file "trace.lisp")' | kcl
+
+td.o: decl.lisp defs.o lib.o td.lisp
+	echo '(load "decl.lisp") (load "defs") (load "lib") ;\
+	(compile-file "td.lisp")' | kcl
+
+readin.o: decl.lisp defs.o readin.lisp
+	echo '(load "decl.lisp") (load "defs") ;\
+	(compile-file "readin.lisp")' | kcl
+
+uranus: packages
+	echo '(load "make-uranus.lisp") ;\
+	(si:save-system "uranus")' | kcl
+
+

@@ -1,0 +1,81 @@
+From nakashim@uranus.etl.go.jp Mon Oct  4 21:12:27 EDT 1993
+Article: 19039 of comp.ai
+Xref: honeydew.srv.cs.cmu.edu comp.ai:19039
+Newsgroups: comp.ai
+Path: honeydew.srv.cs.cmu.edu!rochester!udel!gatech!swrinde!elroy.jpl.nasa.gov!usc!cs.utexas.edu!uunet!olivea!koriel!sh.wide!wnoc-tyo-news!etl.go.jp!etlss2!nakashim
+From: nakashim@uranus.etl.go.jp (Hideyuki Nakashima)
+Subject: Uranus system available
+Message-ID: <NAKASHIM.93Oct1151229@uranus.etl.go.jp>
+Sender: news@etl.go.jp (News System)
+Nntp-Posting-Host: uranus
+Organization: Electrotechnical Laboratory
+Date: Fri, 1 Oct 1993 06:12:29 GMT
+Lines: 65
+
+
+A logic based knowledge representation language Uranus is available
+through ftp.
+
+1. License
+
+Uranus is free to use, copy and modify as long as it is used for
+RESEARCH PURPOSE ONLY.
+
+URANUS PROVIDES ABSOLUTELY NO GUARANTEE.
+
+2. Ftp Site
+
+  machine: etlport.etl.go.jp
+  IP: 192.31.197.99
+  login: anonymous
+  directory: pub/uranus/ftp
+
+3. What is Uranus
+
+- Uranus is an extension of Prolog written in Common Lisp and
+  has the syntax of Lisp.
+
+- Uranus extends Prolog in the following two features:
+ 1. multiple world mechanism
+ 2. term descriptions to provide functional programming
+    within the framework of logic programming.
+
+- All Lisp functions are usable.
+
+How to Install Uranus:
+1) Unpack files in a proper directory.
+2) Copy proper Makefile-* file to Makefile.
+3) Make.
+4) Move Uranus object to a proper directory.
+
+File Descriptions:
+
+ amuse.lisp		editor
+*defs.lisp		definitions of variables etc.
+*kernel.lisp		Uranus kernel (most important part)
+ lib.lisp		library Lisp functions (must be changed for each lisp)
+*lispfunctions.lisp	interface from Uranus to Lisp
+ make-uranus.lisp	creates a system image of Uranus
+ manual.ps		the manual
+*readin.lisp		read-in macros
+*stepper.lisp		stepper
+ systempred.lisp	Uranus system predicates
+*td.lisp		term descriptions
+*trace.lisp		tracer
+
+Files marked * are the minimum requirements for Uranus system.
+
+4. The Author
+
+ Hideyuki Nakashima
+ e-mail address: nakashim@etl.go.jp
+
+
+--
+Hideyuki Nakashima
+Cooperative Architecture
+Electrotechincal Lab.
+
+
+
+
