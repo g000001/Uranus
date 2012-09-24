@@ -11,16 +11,12 @@
 
 (in-package :amuse)
 
-(export '(getfile putfile fetchvalue) 'amuse)
-
-(shadow '(list-length))
 
 (defvar edit-name nil "")
 (defvar editor-get-definition nil "")
 (defvar editor-restore-definition nil "")
 (defvar editor-execute nil "")
 
-(export '(edit-name editor-get-definition editor-restore-definition editor-execute))
 
 (defvar edit-command nil "")
 (defvar entrance-command nil "")
@@ -203,7 +199,7 @@
 
 #+maclisp
 (defun ec@var (x) (SETQ EDITOR-VARIABLE-PREFIX (car (exploden x))))
-#+symbolics
+
 (defun ec@var (x) (setf editor-variable-prefix (aref (symbol-name x) 0)))
 
 (defun ec@z () (THROW ':EDIT NIL))

@@ -55,7 +55,7 @@
 
 (defun print-eager-td (td str)
   (if (and (listp td) (eq (car td) 'eval))
-      (format t "\@~a" (second td))
+      (format str "\@~a" (second td))
       (progn (princ "{" str)
 	     (print-td-rest td "}" str))))
 

@@ -9,7 +9,6 @@
 #+kcl(make-package 'uranus-code :use nil)
 #+lucid (proclaim '(optimize speed (safety 0)))
 
-(shadow 'assert)
 
 (defvar unseen-defs nil "")
 (defvar unseen-world nil "")
@@ -72,7 +71,7 @@
 (defmacro def-sys-pred (names args . body)
   (cond ((symbolp names) `(def-sys-pred* ,names ,args . ,body))
 	(t
-	 `(eval-when (compile eval load)
+	 `(eval-when (:compile-toplevel :execute :load-toplevel)
 		     . ,(mapcar  #'(lambda (x) `(def-sys-pred ,x ,args . ,body))
 				 names)))))
 
@@ -1004,6 +1003,16 @@
 
 (DEF-SYS-PRED LOOP URANUS-USER::? (CATCH :LOOP (P@LOOP @ARGS @OLD-SUBST)))
 
+(defmacro errset (form flag)
+  (let ((val (gensym "errorset-val-"))
+        (errorp (gensym "errorset-errorp-")))
+   `(multiple-value-bind (,val ,errorp)
+                         (ignore-errors ,form)
+      (if ,val
+          (list ,val)
+          (progn (and ,flag (print ,errorp *error-output*))
+                 nil)))))
+
 (DEF-SYS-PRED exit NIL
   (or (errset (THROW :LOOP T) nil)
       (REPORT-ERROR '"EXIT USED OUTSIDE LOOP")))
@@ -1065,7 +1074,7 @@
       (cons (CONS '"" (CDaR @FETCHED-SUBST)) (CDR @FETCHED-SUBST)))))
 
 (DEF-SYS-PRED EDITS (*NAME . *COMMANDS)
-  (P@EDIT (FETCHVALU '*NAME @SUBST)
+  (P@EDIT (FETCHVALUE '*NAME @SUBST)
           (FETCHVALUE
            (FETCH '*COMMANDS @SUBST)
            (cons (CONS '"" (CDaR @FETCHED-SUBST)) (CDR @FETCHED-SUBST)))
@@ -1369,8 +1378,9 @@ Which world? " name world)
 		;; eliminate the dupulicated world and insert it into top posion.
 		;;  "delete" destroys the structure, so "remove" is used instead.
 		((ATOM WORLD) (CONS WORLD (remove world @URANUS-WORLD)))
-		((listp world) (append world @uranus-world))
-		(T (REPORT-ERROR "ILLEGAL ARGUMENT TO WITH" world))))
+		((consp world) (append world @uranus-world))
+		;; (T (REPORT-ERROR "ILLEGAL ARGUMENT TO WITH" world))
+                ))
 	(@level (1+ @level)))
     ;;;
     ;;; Create new environment to implment a world binding of a term description.

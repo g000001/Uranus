@@ -72,7 +72,12 @@
 
 (in-package :uranus)
 
+
+(defvar uranus@version "V-19.8")
+
+
 (eval-when (:compile-toplevel :load-toplevel :execute)
+
 
 ;;; The things to be fixed:
 ;;;
@@ -81,10 +86,8 @@
 
 ;(export 'initial-readtable 'system)
 
-#|(defvar uranus-readtable (copy-readtable nil) "readtable for uranus system")|#
-(defvar uranus-readtable *READTABLE* "readtable for uranus system")
+(defvar uranus-readtable (copy-readtable nil) "readtable for uranus system")
 
-(export 'uranus-readtable)
 
 ;;; Internal registers of the Uranus kernel machine.
 (defvar @LAST-RESULT nil "")
@@ -92,7 +95,6 @@
 (defvar @reload-flag nil "T if reloading a file")
 (defvar @reload-deflist nil "List of reloading predicate names")
 
-(export '(@reload-deflist @reload-flag))
 
 (defvar @DEBUG nil "Debug flag = @step or @trace")
 (defvar @DEBUG1 nil "")
@@ -107,8 +109,6 @@
 (defvar @TRACEALL nil "")
 
 (defvar @PRINTLEVEL 20. "Level of usual printing")
-
-(export '(@printlevel))
 
 
 #+symbolics

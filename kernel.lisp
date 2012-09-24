@@ -8,8 +8,6 @@
 (in-package :uranus)
 #+lucid (proclaim '(optimize speed (safety 0)))
 
-(shadow 'system)
-(export '(uranus))
 
 (DEFUN VERSION NIL (PRINC uranus@version)) ;;; changed
 
@@ -175,7 +173,6 @@
   (let ((@uranus-world @basic-world))
     (execute item printp)))
 
-(export '(toplevel-execute))
 
 (DEFUN EXECUTE (ITEM &optional (printp t))
   (LET ((@DEBUG nil))

@@ -6,7 +6,7 @@
 
 #+lucid (proclaim '(optimize speed (safety 0)))
 
-(defun rind (prmpt) (princ prmpt standard-input) (read standard-input))
+(defun rind (prmpt) (princ prmpt standard-input) (read *standard-input*))
 
 ;#-CCL
 (defun tyi (&optional (stream *terminal-io*))
