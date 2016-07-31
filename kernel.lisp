@@ -180,14 +180,15 @@
     (CATCH :URANUSLOOP			
       (LET ((ATTENTION-HANDLER (FUNCTION ATTENTION)) 
             ($SUBST (NEWSUBST))			
-	    (@undolist nil))
-	(let ((result (if (td-p item) item
-		      (refute item $subst))))
+            (@undolist nil) )
+        (let ((result (if (td-p item) item
+                          (refute item $subst) )))
           (AND printp
-               (pprint (FETCHVALUE RESULT $SUBST @PRINTLEVEL)))
-          (SETQ @LAST-RESULT (CONS RESULT $SUBST)))))
+               (pprint (FETCHVALUE RESULT $SUBST @PRINTLEVEL)) )
+          (SETQ @LAST-RESULT (CONS RESULT $SUBST))
+          (FETCHVALUE RESULT $SUBST @PRINTLEVEL) )))
     (setf (get 'LAST-INPUT (if (atom @uranus-world) @uranus-world (CAR @URANUS-WORLD)))
-	  (NCONS (NCONS (NCONS ITEM))))))
+          (NCONS (NCONS (NCONS ITEM))) )))
 
 ;;; Result is a interfece to Lisp.  (result <form>) returns the result.
 

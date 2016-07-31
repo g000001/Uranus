@@ -619,16 +619,16 @@
   
 (defun p@list-neg-pos (name neg-pos)
   (MAPC #'(LAMBDA (D)
-	    (cond ((null d) (print nil standard-output))
+	    (cond ((null d) (print nil *standard-output*))
 		  (t (Pprint 
 		       `(Uranus-User::deny (,name . ,(car d)) . ,(cdr d))
-		       standard-output))))
+		       *standard-output*))))
 	(car neg-pos))
   (MAPC #'(LAMBDA (D)
-	    (cond ((null d) (print nil standard-output))
+	    (cond ((null d) (print nil *standard-output*))
 		  (t (Pprint 
 		       `(Uranus-User::assertq (,name . ,(car d)) . ,(cdr d))
-		       standard-output))))
+		       *standard-output*))))
 	(cdr neg-pos)))
 (def-sys-pred retract (*name . *body)
   (retract (fetch '*name @subst) @fetched-subst (fetch '*body @subst) @fetched-subst))
@@ -654,12 +654,12 @@
 
 (def-sys-pred clear-input *file
   (let ((file (fetchvalue '*file @subst)))
-    (clear-input (if file (car file) terminal-input))
+    (clear-input (if file (car file) *terminal-io*))
     t))
 
 (def-sys-pred clear-output *file
   (let ((file (fetchvalue '*file @subst)))
-    (clear-output (if file (car file) terminal-input))
+    (clear-output (if file (car file) *terminal-io*))
     t))
 
 (DEF-SYS-PRED DEL (*FILE . *NAMES)
@@ -675,7 +675,7 @@
   (P@DUMP (FETCHVALUE '*FILE @SUBST) (FETCHVALUE '*NAMES @SUBST)))
 
 (DEFUN P@DUMP (FILENAME NAMES)
-  (PROG (FLIST STANDARD-OUTPUT FILE pathname)
+  (PROG (FLIST *STANDARD-OUTPUT* FILE pathname)
     (SETQ FLIST 
           (COND ((SYMBOLP NAMES) (GET NAMES :WORLD))
                 ((LISTP NAMES) NAMES)
@@ -686,13 +686,13 @@
 		     #-symbolics @default-pathname))
     (COND (FLIST (setf (get (pathtosym pathname) 'loaded) FLIST))
           (T (report-error "NOTHING TO BE DUMPED" NAMES) (RETURN T)))
-    (SETQ STANDARD-OUTPUT
+    (SETQ *STANDARD-OUTPUT*
 	  (SETQ FILE
 		(OPEN pathname :direction :output #+vax :if-exists #+vax :overwrite)))
 
-    (format standard-output ";;; -*- Mode: Uranus; Base:10 -*-~%")
-    (format standard-output ";;; File created from Uranus system on:~%")
-#+symbolics    (format standard-output ";;; ~\date\~3%" (time::get-universal-time))
+    (format *standard-output* ";;; -*- Mode: Uranus; Base:10 -*-~%")
+    (format *standard-output* ";;; File created from Uranus system on:~%")
+#+symbolics    (format *standard-output* ";;; ~\date\~3%" (time::get-universal-time))
 
     (COND ((ATOM FLIST)
            (report-error "ILLEGAL ARGUMENT TO DUMP" FLIST)
@@ -706,7 +706,7 @@
 
 
 
-(DEF-SYS-PRED PRIND (*X) (PROG1 T (PPRINT (FETCHVALUE '*X @SUBST) standard-output)))
+(DEF-SYS-PRED PRIND (*X) (PROG1 T (PPRINT (FETCHVALUE '*X @SUBST) *standard-output*)))
 
 (DEF-SYS-PRED LOAD *FILE (P@LOAD (FETCHVALUE '*FILE @SUBST)))
 
@@ -760,37 +760,37 @@
 (DEF-SYS-PRED PRINT (*X . *Y)
   (LET* ((ARGS (FETCHVALUE '*Y @SUBST))
 	 (stream (AND ARGS (CAR ARGS)))
-	 (STANDARD-OUTPUT
-	   (COND ((eq stream 'terminal-output) terminal-output)
+	 (*STANDARD-OUTPUT*
+	   (COND ((eq stream '*terminal-io*) *terminal-io*)
 		 (stream)
-		 (T STANDARD-OUTPUT))))
+		 (T *STANDARD-OUTPUT*))))
     (and args (cdr args) (report-error "TOO MANY ARGUMENTS TO PRINT" args))
     (print (FETCHVALUE (fetch '*X @SUBST) @fetched-subst @PRINTLEVEL)
-	   standard-output)
+	   *standard-output*)
     T))
 
 (DEF-SYS-PRED PRIN1 (*X . *Y)
   (LET* ((ARGS (FETCHVALUE '*Y @SUBST))
 	 (stream (AND ARGS (CAR ARGS)))
-	 (STANDARD-OUTPUT
-	   (COND ((eq stream 'terminal-output) terminal-output)
+	 (*STANDARD-OUTPUT*
+	   (COND ((eq stream '*terminal-io*) *terminal-io*)
 		 (stream)
-		 (T STANDARD-OUTPUT))))
+		 (T *STANDARD-OUTPUT*))))
     (and args (cdr args) (report-error "TOO MANY ARGUMENTS TO PRIN1" args))
     (prin1 (FETCHVALUE (fetch '*X @SUBST) @fetched-subst @PRINTLEVEL)
-	   standard-output)
+	   *standard-output*)
     T))
 
 (DEF-SYS-PRED PRINC (*X . *Y)
   (LET* ((ARGS (FETCHVALUE '*Y @SUBST))
 	 (stream (AND ARGS (CAR ARGS)))
-	 (STANDARD-OUTPUT
-	   (COND ((eq stream 'terminal-output) terminal-output)
+	 (*STANDARD-OUTPUT*
+	   (COND ((eq stream '*terminal-io*) *terminal-io*)
 		 (stream)
-		 (T STANDARD-OUTPUT))))
+		 (T *STANDARD-OUTPUT*))))
     (and args (cdr args) (report-error "TOO MANY ARGUMENTS TO PRINC" args))
     (PRINc (FETCHVALUE (fetch '*X @SUBST) @fetched-subst @PRINTLEVEL)
-	   standard-output)
+	   *standard-output*)
     T))
 
 (DEF-SYS-PRED PRINT-LEVEL (*LEVEL)
@@ -808,23 +808,23 @@
 (DEF-SYS-PRED READ (*X . *STREAM)
   (UNIFY '*X
 	 @SUBST
-	 (LET ((STANDARD-INPUT
+	 (LET ((*STANDARD-INPUT*
 		 (LET ((S (FETCHVALUE '*STREAM @SUBST)))
-		   (COND ((null s) standard-input)
-			 ((eq (car s) 'terminal-input) terminal-input)
+		   (COND ((null s) *standard-input*)
+			 ((eq (car s) '*terminal-io*) *terminal-io*)
 			 (t (car s))))))
-	   (READ STANDARD-INPUT))
+	   (READ *STANDARD-INPUT*))
 	 (newsubst '||)))
 
 (DEF-SYS-PRED FREAD (*X . *STREAM)                       ;FREAD reads an
   (UNIFY '*X					;expression in the
 	 @SUBST					;current environment.
-	 (LET ((STANDARD-INPUT
+	 (LET ((*STANDARD-INPUT*
 		 (LET ((S (FETCHVALUE '*STREAM @SUBST)))
-		   (COND ((null s) standard-input)
-			 ((eq (car s) 'terminal-input) terminal-input)
+		   (COND ((null s) *standard-input*)
+			 ((eq (car s) '*terminal-io*) *terminal-io*)
 			 (t (car s))))))
-	   (READ STANDARD-INPUT))
+	   (READ *STANDARD-INPUT*))
 	 @old-subst))
 
 (def-sys-pred standard-input (*stream)
@@ -846,14 +846,14 @@
 (DEF-SYS-PRED STORE (*FILE) (P@STORE (FETCHVALUE '*FILE @SUBST)))
 
 (DEFUN P@STORE (FILENAME)
-   (PROG (FLIST STANDARD-OUTPUT FILE pathname)
+   (PROG (FLIST *STANDARD-OUTPUT* FILE pathname)
 	 (setq pathname (merge-pathnames
 			  filename
 			  #+symbolics(merge-pathnames (fs:user-homedir) @default-pathname)
 			  #-symbolics @default-pathname))
 	 (SETQ FLIST (get (pathtosym pathname) 'LOADED))
 	 (COND (FLIST) (T (report-error '"NOT LOADED YET" FILENAME) (RETURN T)))
-	 (SETQ STANDARD-OUTPUT
+	 (SETQ *STANDARD-OUTPUT*
 	       (SETQ FILE (OPEN pathname :direction :output)))
 	 (COND ((ATOM FLIST)
 		(report-error '"ILLEGAL ARGUMENT TO STORE" FLIST)
@@ -864,16 +864,16 @@
 
 (DEF-SYS-PRED TERPRI *file
 	      (prog1 t
-		(terpri (or (car (fetchvalue '*file @subst)) standard-output))))
+		(terpri (or (car (fetchvalue '*file @subst)) *standard-output*))))
 
 (def-sys-pred tyi (*char . *file)
   (unify '*char @subst
-	 (read-char (or (car (fetchvalue '*file @subst)) standard-output))
+	 (read-char (or (car (fetchvalue '*file @subst)) *standard-output*))
 	 nil))
 
 (def-sys-pred tyo (*char . *file)
   (write-char (fetchvalue '*char @subst)
-	      (or (car (fetchvalue '*file @subst)) standard-output)))
+	      (or (car (fetchvalue '*file @subst)) *standard-output*)))
 
 
 ;;;
@@ -1227,8 +1227,8 @@
 ;;; Error handling predicats
 ;;;
 (DEF-SYS-PRED ATTENTION NIL
-  (LET ((STANDARD-OUTPUT terminal-output)
-	(standard-input terminal-input)
+  (LET ((*STANDARD-OUTPUT* *terminal-io*)
+	(*standard-input* *terminal-io*)
 	(@error-or-attention T))
     (URANUS-STEP)
     t))
@@ -1466,7 +1466,7 @@ Which world? " name world)
 			 (p@list-neg-pos name (strip-last-nil (get name world))))
                         (T (PRINC "UNDEFINED PREDICATE :")
                            (PPRINT NAME) (TERPRI))))
-                 (T (pprint NAME standard-output)))))
+                 (T (pprint NAME *standard-output*)))))
         FLIST))
 
 (defun strip-last-nil (x)
